@@ -1,0 +1,163 @@
+---
+title: "Cross-site meta-analysis and plots"
+author: "Luiz Guilherme dos Santos Ribas et al."
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+    theme: readable
+---
+
+This R Markdown document reproduces the **cross-site meta-analysis** and the main comparative plots, combining the outputs from the four site-specific scripts:
+
+- ITA (`Itamambuca_T0_T156.xlsx`)
+- CAR (`Cardoso_T0_T156.xlsx`)
+- CBO (`Carlos_Botelho_T0_T108.xlsx`)
+- VG (`Vargem_Grande_T0_T156.xlsx`)
+
+## Before you run
+
+1. Run the four site scripts first. They will save outputs to your Desktop in `Defaunation_biotic_homogenization/<SITE>/`.
+2. Then run this meta-analysis script, which reads those outputs and produces combined figures/tables.
+
+⚠️ Note: The scripts are set to save results to the user’s Desktop on Windows. If you are using macOS or Linux, you’ll need to adjust the `desktop_path` accordingly.
+
+## Meta-analysis script
+
+```{r}
+### Load required libraries
+library(readxl)
+library(dplyr)
+library(ggplot2)
+library(cowplot)
+library(tidyverse)
+
+### Set your working directory
+desktop_path <- if (.Platform$OS.type == "windows") file.path(Sys.getenv("USERPROFILE"), "Desktop") else file.path(Sys.getenv("HOME"), "Desktop")
+output_dir <- file.path(desktop_path, "Defaunation_biotic_homogenization", "Meta_analysis")
+dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+setwd(output_dir)
+
+### File paths
+file_paths <- list(
+  beta = "effects beta.xlsx",
+  richness = "effects richness.xlsx",
+  shannon = "effects shannon.xlsx",
+  inverse_simpson = "effects inverse simpson.xlsx"
+)
+
+### Read interaction terms using confidence intervals
+read_interaction_effects <- function(file_path) {
+  sheet_names <- excel_sheets(file_path)
+  
+  data_list <- lapply(sheet_names, function(sheet) {
+    df <- read_excel(file_path, sheet = sheet)
+    colnames(df) <- make.names(colnames(df))
+    
+    interaction_row <- df %>% filter(grepl("Time:TreatmentDefaunation", Term))
+    
+    # Extract CI limits from the "IC" column
+    ci_values <- str_extract_all(interaction_row$CI, "\\d+\\.\\d+")[[1]]
+    ci_lower <- as.numeric(ci_values[1])
+    ci_upper <- as.numeric(ci_values[2])
+    
+    interaction_row %>%
+      mutate(
+        Estimate = as.numeric(Estimate),
+        CI_lower = ci_lower,
+        CI_upper = ci_upper,
+        Experiment = sheet
+      ) %>%
+      select(Experiment, Estimate, CI_lower, CI_upper)
+  })
+  
+  bind_rows(data_list)
+}
+
+### Function to generate pairwise comparison plots
+generate_comparison_plot <- function(data, plot_title, x_breaks, x_label) {
+  data$Site <- recode(data$Experiment,
+                      Itamambuca = "ITA",
+                      Cardoso = "CAR",
+                      Botelho = "CBO",
+                      Vargem = "VG")
+  
+  ordered_pairs <- list(
+    c("ITA", "CAR"),
+    c("ITA", "CBO"),
+    c("ITA", "VG"),
+    c("CAR", "CBO"),
+    c("CAR", "VG"),
+    c("CBO", "VG")
+  )
+  
+  comparisons <- lapply(ordered_pairs, function(pair) {
+    row1 <- filter(data, Site == pair[1])
+    row2 <- filter(data, Site == pair[2])
+    
+    diff <- row1$Estimate - row2$Estimate
+    se_diff <- sqrt(((row1$CI_upper - row1$CI_lower) / (2 * 1.96))^2 +
+                      ((row2$CI_upper - row2$CI_lower) / (2 * 1.96))^2)
+    z <- diff / se_diff
+    p <- 2 * (1 - pnorm(abs(z)))
+    
+    data.frame(
+      Comparison = paste(pair[1], "vs.", pair[2]),
+      Difference = diff,
+      SE_Difference = se_diff,
+      P = p,
+      Symbol = ifelse(p < 0.05, "Significant", "Non-significant")
+    )
+  })
+  
+  df <- bind_rows(comparisons)
+  
+  # Set factor levels in the desired order
+  df$Comparison <- factor(df$Comparison, levels = rev(c(
+    "ITA vs. CAR", "ITA vs. CBO", "ITA vs. VG",
+    "CAR vs. CBO", "CAR vs. VG", "CBO vs. VG"
+  )))
+  
+  ggplot(df, aes(x = Difference, y = Comparison)) +
+    geom_point(aes(shape = Symbol), size = 6, fill = "black") +
+    geom_errorbarh(aes(xmin = Difference - 1.96 * SE_Difference,
+                       xmax = Difference + 1.96 * SE_Difference), height = 0.2) +
+    geom_vline(xintercept = 0, linetype = "dashed") +
+    scale_shape_manual(values = c("Non-significant" = 21, "Significant" = 24)) +
+    labs(x = x_label, y = NULL, title = plot_title) +
+    theme_minimal() +
+    theme(
+      axis.text = element_text(size = 12),
+      axis.title.x = element_text(size = 14),
+      plot.title = element_text(size = 16),
+      panel.grid = element_blank(),
+      axis.line.x = element_line(color = "black", size = 0.6),
+      axis.ticks.x = element_line(color = "black", size = 0.6)
+    ) +
+    scale_x_continuous(
+      breaks = pretty(c(df$Difference - 1.96 * df$SE_Difference,
+                        df$Difference + 1.96 * df$SE_Difference), n = 6)
+      
+    )
+}
+
+### Process and plot each metric
+data_list <- lapply(file_paths, read_interaction_effects)
+
+plots <- list(
+  richness = generate_comparison_plot(data_list$richness, "(a) Species richness", seq(-6, 6, 1), ""),
+  shannon = generate_comparison_plot(data_list$shannon, "(b) Shannon", seq(-0.5, 0.5, 0.05), ""),
+  inverse_simpson = generate_comparison_plot(data_list$inverse_simpson, "(c) Inverse Simpson", seq(-6, 6, 1), "Difference in effect sizes (± 95% CI)"),
+  beta = generate_comparison_plot(data_list$beta, "(d) Beta diversity", seq(-0.2, 0.2, 0.02), "Difference in effect sizes (± 95% CI)")
+)
+
+### Combine plots
+plot_grid(plots$richness, plots$shannon, plots$inverse_simpson, plots$beta, ncol = 2)
+```
+
+## Session info
+
+```{r}
+sessionInfo()
+```

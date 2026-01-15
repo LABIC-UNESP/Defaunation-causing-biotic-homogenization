@@ -1,0 +1,764 @@
+---
+title: "Ilha do Cardoso site analysis (CAR)"
+author: "Luiz Guilherme dos Santos Ribas et al."
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+    theme: readable
+---
+
+This R Markdown document reproduces the analyses for **CAR** presented in the paper:
+
+> **Mammal defaunation leads to biotic homogenization of plant communities in tropical rainforests**  
+> Luiz Guilherme dos Santos Ribas, Nacho Villarb, Valesca Zipparro, Sérgio Nazareth, Yuri Souza, Carlos Rodrigo Brocardo, Gabriela Schmaedecke, Luana Hortenci, Rafael Souza Cruz Alves, Mauro Galetti.
+
+## Before you run
+
+1. Install required R packages (see the first code chunk).
+2. Place the corresponding Excel file in the repository folder `data/`.
+3. The script will save outputs to your **Desktop** (Windows) in a folder named `Defaunation_biotic_homogenization/CAR`.
+
+⚠️ Note: The scripts are set to save results to the user’s Desktop on Windows. If you are using macOS or Linux, you’ll need to adjust the `desktop_path` accordingly.
+
+
+**Expected input file:** `data/Cardoso_T0_T156.xlsx`
+
+## Full analysis script
+
+```{r}
+# Ilha do Cardoso
+
+################################
+###################################### Directory and libraries
+###############################
+
+# Set your own directory below
+desktop_path <- if (.Platform$OS.type == "windows") file.path(Sys.getenv("USERPROFILE"), "Desktop") else file.path(Sys.getenv("HOME"), "Desktop")
+output_dir <- file.path(desktop_path, "Defaunation_biotic_homogenization", "CAR")
+dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+setwd(output_dir)
+
+# Load the libraries needed for analysis and plots
+library(readxl)
+library(vegan)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+library(openxlsx)
+library(purrr)
+library(scales)
+library(lmerTest)
+library(tibble)
+library(betapart)
+
+################################
+###################################### Data preparation
+###############################
+
+# Define the Excel file name
+excel_file <- "Cardoso_T0_T156.xlsx"
+# Data folder (relative to repository root)
+data_dir <- "data"
+excel_file_path <- file.path(data_dir, excel_file)
+
+# Define the sheet names
+sheet_names <- c("Cardoso T0", "Cardoso T6", "Cardoso T12", "Cardoso T18", "Cardoso T24", "Cardoso T30", "Cardoso T36", "Cardoso T42", "Cardoso T48", "Cardoso T54", "Cardoso T60", "Cardoso T66", "Cardoso T72", "Cardoso T78", "Cardoso T84", "Cardoso T96", "Cardoso T108", "Cardoso T156")
+
+# Create an empty list to store data frames
+sheet_list <- list()
+
+# Create pairing structure (assuming each treatment sample is paired with a control sample)
+pairs <- rep(1:11)
+pairs2 <- rep(1:11)
+pairs<-c(pairs,pairs2)
+
+# Loop through each sheet and read into separate data frames
+for (sheet in sheet_names) {
+  sheet_data <- read_excel(excel_file_path, sheet = sheet)
+  sheet_list[[sheet]] <- sheet_data
+}
+
+# Extract column names from each sheet
+column_names <- map(sheet_list, names)
+
+# Extract treatment data from each data frame (third column)
+treat_data <- sheet_list[[1]][, 3]
+treat_data<-as.vector(treat_data)
+
+# Creating empty data.frames to save results
+paired.dist<-cbind(treat_data$treatment,pairs)
+colnames(paired.dist)<-c("treatment","pair")
+paired.dist<-as.data.frame(paired.dist)
+empty_df <- data.frame(matrix(NA, nrow = 22, ncol = 18))
+paired.dist.hel<-cbind(paired.dist,empty_df)
+paired.dist.sim<-cbind(paired.dist,empty_df)
+paired.dist.sne<-cbind(paired.dist,empty_df)
+diversity.results<-cbind(paired.dist,empty_df)
+
+# Naming columns
+colnames(paired.dist.hel)<-c("Treatment","Pairs","T0","T6","T12", "T18", "T24", "T30", "T36", "T42", "T48", "T54", "T60", "T66", "T72", "T78", "T84", "T96", "T108", "T156")
+colnames(paired.dist.sim)<-c("Treatment","Pairs","T0","T6","T12", "T18", "T24", "T30", "T36", "T42", "T48", "T54", "T60", "T66", "T72", "T78", "T84", "T96", "T108", "T156")
+colnames(paired.dist.sne)<-c("Treatment","Pairs","T0","T6","T12", "T18", "T24", "T30", "T36", "T42", "T48", "T54", "T60", "T66", "T72", "T78", "T84", "T96", "T108", "T156")
+colnames(diversity.results)<-c("Treatment","Pairs","T0","T6","T12", "T18", "T24", "T30", "T36", "T42", "T48", "T54", "T60", "T66", "T72", "T78", "T84", "T96", "T108", "T156")
+
+################################
+###################################### ALPHA DIVERSITY
+###############################
+
+# Creating empty data.frames for alpha diversity results
+diversity.results_richness<-diversity.results
+diversity.results_shannon<-diversity.results
+diversity.results_simpson<-diversity.results
+
+# Estimating species richness, Shannon and inverse Simpson
+for (i in seq_along(sheet_list)) {
+  # Extract species data from each data frame and remove columns 1 to 3
+  spp_data <- sheet_list[[i]][, -c(1:3)]
+  # Extract treatment data from each data frame (third column)
+  treat_data <- sheet_list[[i]][, 3]
+  
+  spp_data<-as.data.frame(spp_data)
+  treat_data<-as.data.frame(treat_data)
+  
+  control <- spp_data[c(1:11),]
+  treatment <- spp_data[c(12:22),]
+  
+  # Applying hellinger correction
+  control <- decostand(control, method = "hellinger")
+  treatment <- decostand(treatment, method = "hellinger")
+  
+  # Estimate species richness
+  richness_control <- specnumber(control)
+  richness_treatment <- specnumber(treatment)
+  
+  # Calculate Shannon index
+  shannon_index_control <- diversity(control, index = "shannon")
+  shannon_index_treatment <- diversity(treatment, index = "shannon")
+  
+  # Calculate inverse Simpson index
+  simpson_index_control <- diversity(control, index = "invsimpson")
+  simpson_index_treatment <- diversity(treatment, index = "invsimpson")
+  
+  # Grouping
+  diversity.results_richness[1:11,i+2]<-richness_control
+  diversity.results_richness[12:22,i+2]<-richness_treatment
+  
+  diversity.results_shannon[1:11,i+2]<-shannon_index_control
+  diversity.results_shannon[12:22,i+2]<-shannon_index_treatment
+  
+  diversity.results_simpson[1:11,i+2]<-simpson_index_control
+  diversity.results_simpson[12:22,i+2]<-simpson_index_treatment
+}
+
+##########################################
+###### Modeling alpha diversity
+##########################################
+
+###########
+#####  Richness
+###########
+
+# Preparing data
+diversity.results_richness <- na.omit(diversity.results_richness)
+richness_melted_data <- pivot_longer(diversity.results_richness, cols = -c(Treatment, Pairs), names_to = "Time", values_to = "Distance")
+
+# GLMs
+richness_melted_data$Time <- as.numeric(gsub("T", "", richness_melted_data$Time))
+model<-lmer(Distance ~ Time * Treatment + (1 | Pairs), data = richness_melted_data)
+summary(model)
+confint(model)
+
+# Checking some model assumptions
+res <- resid(model)
+qqnorm(res)
+
+##### Preparing data for plots
+# Calculate n based on rows where Pairs is equal to 1
+n <- richness_melted_data %>%
+  summarise(num_pairs = n_distinct(Pairs)) %>%
+  pull(num_pairs)
+
+# Calculate mean and standard error
+richness_summary_data <- richness_melted_data %>%
+  group_by(Time, Treatment) %>%
+  summarize(mean_distance = mean(Distance),
+            sd_distance = sd(Distance),
+            n = n,
+            se_distance = sd_distance / sqrt(n),
+            lower_se = mean_distance - se_distance,
+            upper_se = mean_distance + se_distance,
+  )
+
+# Transform into data.frame for further manipulation
+richness_summary_data<-as.data.frame(richness_summary_data)
+
+# Modify the Time column to remove the "T"
+richness_summary_data$Time <- gsub("T", "", richness_summary_data$Time)
+
+# Define the desired order of time points without "T"
+desired_order <- c("0", "6", "12", "18", "24", "30", "36", "42", "48", "54", "60", "66", "72", "78", "84", "96", "108", "156")
+
+# Convert the "Time" column to a factor with the desired order
+richness_summary_data$Time <- factor(richness_summary_data$Time, levels = desired_order)
+
+# Order the data frame based on the "Time" column
+richness_summary_data <- richness_summary_data[order(richness_summary_data$Time), ]
+
+# Define custom colors
+custom_colors <- c("Control" = "black", "Defaunation" = "#d95f02")
+
+# Data frame with significant differences between interaction term treatment*time from summary(model)
+#significant_months <- data.frame(
+#  Time = c("72", "78", "84", "96", "108", "156"),  # Actual significant months
+#  Treatment = "Defaunation",  
+#  y_position = c(26, 26, 26, 26, 26, 26),  # Position for the annotations, adjust as needed
+#  label = "*"
+#)
+
+# Plot the results from GLM evaluating richness data
+ggplot(richness_summary_data, aes(x = Time, y = mean_distance, color = Treatment, group = Treatment, fill = Treatment)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 3, shape = 21, stroke = 1.5) +
+  geom_ribbon(aes(ymin = lower_se, ymax = upper_se), alpha = 0.2, color = NA) +
+  labs(title = "(B) CAR",
+       x = "Months",
+       y = "Mean richness (± SE)") +
+  theme_minimal(base_size = 14) +
+  scale_color_manual(values = custom_colors, labels = c("Control", "Defaunation")) +
+  scale_fill_manual(values = custom_colors, labels = c("Control", "Defaunation")) +
+  scale_y_continuous(labels = scales::number_format(accuracy = 1), limits = c(10, NA), breaks = seq(10, 26, by = 2)) +
+  theme(
+    legend.title = element_blank(),
+    legend.position = c(0.5, 0.2),
+    legend.text = element_text(size = 16),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.y = element_text(size = 12),
+    axis.title = element_text(size = 14),
+    axis.line = element_line(color = "black"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    plot.title = element_text(size = 20, face = "bold"),
+    plot.subtitle = element_text(size = 14)
+  ) +
+  guides(fill = guide_legend(override.aes = list(color = NA))) #+
+#  geom_text(data = significant_months, aes(x = Time, y = y_position, label = label), color = "black", size = 14)
+
+###########
+#####  Shannon
+###########
+
+# Preparing data
+diversity.results_shannon <- na.omit(diversity.results_shannon)
+shannon_melted_data <- pivot_longer(diversity.results_shannon, cols = -c(Treatment, Pairs), names_to = "Time", values_to = "Distance")
+
+# GLMs
+shannon_melted_data$Time <- as.numeric(gsub("T", "", shannon_melted_data$Time))
+model<-lmer(Distance ~ Time * Treatment + (1 | Pairs), data = shannon_melted_data)
+summary(model)
+confint(model)
+
+# Checking some model assumptions
+res <- resid(model)
+qqnorm(res)
+
+##### Preparing data for plots
+# Calculate n based on rows where Pairs is equal to 1
+n <- shannon_melted_data %>%
+  summarise(num_pairs = n_distinct(Pairs)) %>%
+  pull(num_pairs)
+
+# Calculate mean and standard error
+shannon_summary_data <- shannon_melted_data %>%
+  group_by(Time, Treatment) %>%
+  summarize(mean_distance = mean(Distance),
+            sd_distance = sd(Distance),
+            n = n,
+            se_distance = sd_distance / sqrt(n),
+            lower_se = mean_distance - se_distance,
+            upper_se = mean_distance + se_distance,
+  )
+
+# Transform into data.frame for further manipulation
+shannon_summary_data<-as.data.frame(shannon_summary_data)
+
+# Modify the Time column to remove the "T"
+shannon_summary_data$Time <- gsub("T", "", shannon_summary_data$Time)
+
+# Define the desired order of time points without "T"
+desired_order <- c("0", "6", "12", "18", "24", "30", "36", "42", "48", "54", "60", "66", "72", "78", "84", "96", "108", "156")
+
+# Convert the "Time" column to a factor with the desired order
+shannon_summary_data$Time <- factor(shannon_summary_data$Time, levels = desired_order)
+
+# Order the data frame based on the "Time" column
+shannon_summary_data <- shannon_summary_data[order(shannon_summary_data$Time), ]
+
+# Define custom colors
+custom_colors <- c("Control" = "black", "Defaunation" = "#d95f02")
+
+# Data frame with significant differences between interaction term treatment*time from summary(model)
+#significant_months <- data.frame(
+#  Time = c("0"),  # Actual significant months
+#  Treatment = "Defaunation",
+#  y_position = c(3.2),  # Position for the annotations, adjust as needed
+#  label = "*"
+#)
+
+# Plot the results from GLM evaluating Shannon data
+ggplot(shannon_summary_data, aes(x = Time, y = mean_distance, color = Treatment, group = Treatment, fill = Treatment)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 3, shape = 21, stroke = 1.5) +
+  geom_ribbon(aes(ymin = lower_se, ymax = upper_se), alpha = 0.2, color = NA) +
+  labs(title = "(B) CAR",
+       x = "Months",
+       y = "Mean Shannon (± SE)") +
+  theme_minimal(base_size = 14) +
+  scale_color_manual(values = custom_colors, labels = c("Control", "Defaunation")) +
+  scale_fill_manual(values = custom_colors, labels = c("Control", "Defaunation")) +
+  scale_y_continuous(labels = scales::number_format(accuracy = 0.01), limits = c(2, NA), breaks = seq(2, 3.25, by = 0.25)) +
+  theme(
+    legend.title = element_blank(),
+    legend.position = c(0.5, 0.2),
+    legend.text = element_text(size = 16),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.y = element_text(size = 12),
+    axis.title = element_text(size = 14),
+    axis.line = element_line(color = "black"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    plot.title = element_text(size = 20, face = "bold"),
+    plot.subtitle = element_text(size = 14)
+  ) +
+  guides(fill = guide_legend(override.aes = list(color = NA))) #+
+#  geom_text(data = significant_months, aes(x = Time, y = y_position, label = label), color = "black", size = 14)
+
+###########
+#####  Inverse Simpson
+###########
+
+# Preparing data
+diversity.results_simpson <- na.omit(diversity.results_simpson)
+simpson_melted_data <- pivot_longer(diversity.results_simpson, cols = -c(Treatment, Pairs), names_to = "Time", values_to = "Distance")
+
+# GLMs
+simpson_melted_data$Time <- as.numeric(gsub("T", "", simpson_melted_data$Time))
+model<-lmer(Distance ~ Time * Treatment + (1 | Pairs), data = simpson_melted_data)
+summary(model)
+confint(model)
+
+# Checking some model assumptions
+res <- resid(model)
+qqnorm(res)
+
+##### Preparing data for plots
+# Calculate n based on rows where Pairs is equal to 1
+n <- simpson_melted_data %>%
+  summarise(num_pairs = n_distinct(Pairs)) %>%
+  pull(num_pairs)
+
+# Calculate mean and standard error
+simpson_summary_data <- simpson_melted_data %>%
+  group_by(Time, Treatment) %>%
+  summarize(mean_distance = mean(Distance),
+            sd_distance = sd(Distance),
+            n = n,
+            se_distance = sd_distance / sqrt(n),
+            lower_se = mean_distance - se_distance,
+            upper_se = mean_distance + se_distance,
+  )
+
+# Transform into data.frame for further manipulation
+simpson_summary_data<-as.data.frame(simpson_summary_data)
+
+# Modify the Time column to remove the "T"
+simpson_summary_data$Time <- gsub("T", "", simpson_summary_data$Time)
+
+# Define the desired order of time points without "T"
+desired_order <- c("0", "6", "12", "18", "24", "30", "36", "42", "48", "54", "60", "66", "72", "78", "84", "96", "108", "156")
+
+# Convert the "Time" column to a factor with the desired order
+simpson_summary_data$Time <- factor(simpson_summary_data$Time, levels = desired_order)
+
+# Order the data frame based on the "Time" column
+simpson_summary_data <- simpson_summary_data[order(simpson_summary_data$Time), ]
+
+# Define custom colors
+custom_colors <- c("Control" = "black", "Defaunation" = "#d95f02")
+
+# Data frame with significant differences between interaction term treatment*time from summary(model)
+#significant_months <- data.frame(
+#  Time = c("0"),  # Actual significant months
+#  Treatment = "Defaunation",  
+#  y_position = c(20),  # Position for the annotations, adjust as needed
+#  label = "*"
+#)
+
+# Plot the results from GLM evaluating inverse Simpson data
+ggplot(simpson_summary_data, aes(x = Time, y = mean_distance, color = Treatment, group = Treatment, fill = Treatment)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 3, shape = 21, stroke = 1.5) +
+  geom_ribbon(aes(ymin = lower_se, ymax = upper_se), alpha = 0.2, color = NA) +
+  labs(title = "(B) CAR",
+       x = "Months",
+       y = "Mean inverse Simpson (± SE)") +
+  theme_minimal(base_size = 14) +
+  scale_color_manual(values = custom_colors, labels = c("Control", "Defaunation")) +
+  scale_fill_manual(values = custom_colors, labels = c("Control", "Defaunation")) +
+  scale_y_continuous(labels = scales::number_format(accuracy = 0.01), limits = c(8, NA), breaks = seq(8, 20, by = 2)) +
+  theme(
+    legend.title = element_blank(),
+    legend.position = c(0.5, 1),
+    legend.text = element_text(size = 16),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.y = element_text(size = 12),
+    axis.title = element_text(size = 14),
+    axis.line = element_line(color = "black"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    plot.title = element_text(size = 20, face = "bold"),
+    plot.subtitle = element_text(size = 14)
+  ) +
+  guides(fill = guide_legend(override.aes = list(color = NA))) #+
+#  geom_text(data = significant_months, aes(x = Time, y = y_position, label = label), color = "black", size = 14)
+
+################################
+###### BETA DIVERSITY ##########
+################################
+
+##---------------------------------
+## Helper: jackknife multi-site β
+##---------------------------------
+jackknife_multi_beta <- function(comm) {
+  # comm: community matrix (sites x species), already transformed (e.g., Hellinger)
+  
+  n_sites <- nrow(comm)
+  if (n_sites < 3) stop("Need at least 3 sites for jackknife on multi-site beta.")
+  
+  # Observed multi-site beta (using all sites)
+  bm_full <- beta.multi.abund(comm, index.family = "bray")
+  theta_full <- c(
+    total = bm_full$beta.BRAY,
+    bal   = bm_full$beta.BRAY.BAL,
+    grad  = bm_full$beta.BRAY.GRA
+  )
+  
+  # Jackknife: systematically leave-one-out
+  jack_vals <- matrix(NA_real_, nrow = n_sites, ncol = 3)
+  colnames(jack_vals) <- c("total", "bal", "grad")
+  
+  for (i in seq_len(n_sites)) {
+    comm_i <- comm[-i, , drop = FALSE]
+    bm_i   <- beta.multi.abund(comm_i, index.family = "bray")
+    jack_vals[i, ] <- c(
+      bm_i$beta.BRAY,
+      bm_i$beta.BRAY.BAL,
+      bm_i$beta.BRAY.GRA
+    )
+  }
+  
+  # Jackknife pseudo-values
+  # θ*_i = n * θ_full - (n - 1) * θ_(−i)
+  pseudo <- matrix(NA_real_, nrow = n_sites, ncol = 3)
+  colnames(pseudo) <- c("total", "bal", "grad")
+  
+  for (k in 1:3) {
+    theta_k_full <- theta_full[k]
+    theta_k_jack <- jack_vals[, k]
+    pseudo[, k]  <- n_sites * theta_k_full - (n_sites - 1) * theta_k_jack
+  }
+  
+  # For each component: jackknife mean and variance of pseudo-values
+  pseudo_mean <- colMeans(pseudo)
+  var_jack    <- colSums((pseudo - matrix(pseudo_mean, n_sites, 3, byrow = TRUE))^2) /
+    (n_sites * (n_sites - 1))
+  se_jack     <- sqrt(var_jack)
+  
+  # Approx. 95% CI using t_{n-1}
+  alpha <- 0.05
+  t_crit <- qt(1 - alpha / 2, df = n_sites - 1)
+  
+  lower <- theta_full - t_crit * se_jack
+  upper <- theta_full + t_crit * se_jack
+  
+  list(
+    obs_total   = theta_full["total"],
+    obs_bal     = theta_full["bal"],
+    obs_grad    = theta_full["grad"],
+    se_total    = se_jack["total"],
+    se_bal      = se_jack["bal"],
+    se_grad     = se_jack["grad"],
+    lower_total = lower["total"],
+    upper_total = upper["total"],
+    lower_bal   = lower["bal"],
+    upper_bal   = upper["bal"],
+    lower_grad  = lower["grad"],
+    upper_grad  = upper["grad"]
+  )
+}
+
+################################
+###### MULTI-SITE β LOOP #######
+################################
+
+# labels like "T0","T6",...
+time_labels <- gsub("Cardoso ", "", sheet_names)
+
+# Data frame for multi-site β + jackknife SE/CI
+beta_multi_df <- expand.grid(
+  Time      = time_labels,
+  Treatment = c("Control", "Defaunation"),
+  stringsAsFactors = FALSE
+) %>%
+  mutate(
+    beta_total   = NA_real_,
+    beta_bal     = NA_real_,
+    beta_grad    = NA_real_,
+    se_total     = NA_real_,
+    se_bal       = NA_real_,
+    se_grad      = NA_real_,
+    lower_total  = NA_real_,
+    upper_total  = NA_real_,
+    lower_bal    = NA_real_,
+    upper_bal    = NA_real_,
+    lower_grad   = NA_real_,
+    upper_grad   = NA_real_
+  )
+
+# (optional) keep if you still want pairwise summaries
+beta_pairwise_df <- data.frame(
+  Time        = character(),
+  Treatment   = character(),
+  mean_within = numeric(),
+  stringsAsFactors = FALSE
+)
+
+for (i in seq_along(sheet_list)) {
+  
+  this_sheet <- sheet_list[[i]]
+  
+  spp_data  <- this_sheet[, -c(1:3)]
+  treat_col <- this_sheet[, 3, drop = FALSE]
+  colnames(treat_col) <- "Treatment"
+  
+  spp_data   <- as.data.frame(spp_data)
+  treat_data <- as.data.frame(treat_col)
+  treat_data$Treatment <- factor(treat_data$Treatment)
+  
+  # Hellinger transform
+  spp_data_hel <- decostand(spp_data, method = "hellinger")
+  
+  # ---------- Multi-site β (Baselga) por tratamento + jackknife ----------
+  for (tr in levels(treat_data$Treatment)) {
+    idx <- which(treat_data$Treatment == tr)
+    if (length(idx) >= 3) {  # need at least 3 sites for jackknife
+      comm_tr  <- spp_data_hel[idx, , drop = FALSE]
+      jack_out <- jackknife_multi_beta(comm_tr)
+      
+      row_sel <- beta_multi_df$Time == time_labels[i] &
+        beta_multi_df$Treatment == tr
+      
+      beta_multi_df[row_sel,
+                    c("beta_total", "beta_bal", "beta_grad",
+                      "se_total", "se_bal", "se_grad",
+                      "lower_total", "upper_total",
+                      "lower_bal", "upper_bal",
+                      "lower_grad", "upper_grad")] <-
+        c(
+          jack_out$obs_total,
+          jack_out$obs_bal,
+          jack_out$obs_grad,
+          jack_out$se_total,
+          jack_out$se_bal,
+          jack_out$se_grad,
+          jack_out$lower_total,
+          jack_out$upper_total,
+          jack_out$lower_bal,
+          jack_out$upper_bal,
+          jack_out$lower_grad,
+          jack_out$upper_grad
+        )
+    }
+  }
+  
+  # ---------- OPTIONAL: mean pairwise Bray dentro de tratamentos ----------
+  bray_curtis_dist <- vegdist(spp_data_hel, method = "bray")
+  bray_mat <- as.matrix(bray_curtis_dist)
+  
+  for (tr in levels(treat_data$Treatment)) {
+    idx <- which(treat_data$Treatment == tr)
+    if (length(idx) >= 2) {
+      submat <- bray_mat[idx, idx]
+      mean_within <- mean(submat[upper.tri(submat)], na.rm = TRUE)
+      
+      beta_pairwise_df <- rbind(
+        beta_pairwise_df,
+        data.frame(
+          Time        = time_labels[i],
+          Treatment   = tr,
+          mean_within = mean_within,
+          stringsAsFactors = FALSE
+        )
+      )
+    }
+  }
+}
+
+##########################################
+###### Modelos: multi-site β #############
+##########################################
+
+beta_multi_long <- beta_multi_df %>%
+  mutate(
+    Time_num  = as.numeric(gsub("T", "", Time)),
+    Time      = gsub("T", "", Time),
+    Time      = factor(Time, levels = desired_order),
+    Treatment = factor(Treatment)
+  )
+
+# Total multi-site β
+model_beta_total <- lm(
+  beta_total ~ Time_num * Treatment,
+  data    = beta_multi_long
+)
+summary(model_beta_total)
+confint(model_beta_total)
+
+# Balanced variation
+model_beta_bal <- lm(
+  beta_bal ~ Time_num * Treatment,
+  data    = beta_multi_long
+)
+summary(model_beta_bal)
+confint(model_beta_bal)
+
+# Abundance gradients
+model_beta_grad <- lm(
+  beta_grad ~ Time_num * Treatment,
+  data    = beta_multi_long
+)
+summary(model_beta_grad)
+confint(model_beta_grad)
+
+##############################################
+#### Plots: multi-site β + 95% CI (jackknife)
+##############################################
+
+## Total multi-site β
+ggplot(beta_multi_long,
+       aes(x = Time, y = beta_total,
+           color = Treatment, group = Treatment, fill = Treatment)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 3, shape = 21, stroke = 1.5) +
+  geom_ribbon(aes(ymin = beta_total - se_total,
+                  ymax = beta_total + se_total),
+              alpha = 0.2, color = NA) +
+  labs(
+    title = "CAR",
+    x = "Months",
+    y = "Total multi-site β (± SE)"
+  ) +
+  theme_minimal(base_size = 14) +
+  scale_color_manual(values = custom_colors,
+                     labels = c("Control", "Defaunation")) +
+  scale_fill_manual(values = custom_colors,
+                    labels = c("Control", "Defaunation")) +
+  scale_y_continuous(labels = scales::number_format(accuracy = 0.01),
+                     limits = c(0.85, 0.93),           # << Y min/max
+                     breaks = seq(0.85, 0.93, 0.02)    # << every 0.01
+  ) +
+  theme(
+    legend.title     = element_blank(),
+    legend.position  = c(0.5, 0.9),
+    legend.text      = element_text(size = 16),
+    axis.text.x      = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.y      = element_text(size = 12),
+    axis.title       = element_text(size = 14),
+    axis.line        = element_line(color = "black"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    plot.title       = element_text(size = 20, face = "bold")
+  ) +
+  guides(fill = guide_legend(override.aes = list(color = NA)))
+
+## Balanced variation (multi-site β)
+ggplot(beta_multi_long,
+       aes(x = Time, y = beta_bal,
+           color = Treatment, group = Treatment, fill = Treatment)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 3, shape = 21, stroke = 1.5) +
+  geom_ribbon(aes(ymin = beta_bal - se_bal,
+                  ymax = beta_bal + se_bal),
+              alpha = 0.2, color = NA) +
+  labs(
+    title = "CAR",
+    x = "Months",
+    y = "Balanced variation (± SE)"
+  ) +
+  theme_minimal(base_size = 14) +
+  scale_color_manual(values = custom_colors,
+                     labels = c("Control", "Defaunation")) +
+  scale_fill_manual(values = custom_colors,
+                    labels = c("Control", "Defaunation")) +
+  scale_y_continuous(labels = scales::number_format(accuracy = 0.01),
+                     limits = c(0.84, 0.92),           # << Y min/max
+                     breaks = seq(0.84, 0.92, 0.02)    # << every 0.01
+  ) +
+  theme(
+    legend.title    = element_blank(),
+    legend.position = c(0.5, 0.9),
+    legend.text     = element_text(size = 16),
+    axis.text.x     = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.y     = element_text(size = 12),
+    axis.title      = element_text(size = 14),
+    axis.line       = element_line(color = "black"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    plot.title      = element_text(size = 20, face = "bold")
+  ) +
+  guides(fill = guide_legend(override.aes = list(color = NA)))
+
+## Abundance gradients (multi-site β)
+ggplot(beta_multi_long,
+       aes(x = Time, y = beta_grad,
+           color = Treatment, group = Treatment, fill = Treatment)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 3, shape = 21, stroke = 1.5) +
+  geom_ribbon(aes(ymin = beta_grad - se_grad,
+                  ymax = beta_grad + se_grad),
+              alpha = 0.2, color = NA) +
+  labs(
+    title = "CAR",
+    x = "Months",
+    y = "Abundance gradients (± SE)"
+  ) +
+  theme_minimal(base_size = 14) +
+  scale_color_manual(values = custom_colors,
+                     labels = c("Control", "Defaunation")) +
+  scale_fill_manual(values = custom_colors,
+                    labels = c("Control", "Defaunation")) +
+  scale_y_continuous(labels = scales::number_format(accuracy = 0.01),
+                     limits = c(0, 0.03),           # << Y min/max
+                     breaks = seq(0, 0.03, 0.01)    # << every 0.01
+  ) +
+  theme(
+    legend.title    = element_blank(),
+    legend.position = c(0.5, 0.9),
+    legend.text     = element_text(size = 16),
+    axis.text.x     = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.y     = element_text(size = 12),
+    axis.title      = element_text(size = 14),
+    axis.line       = element_line(color = "black"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    plot.title      = element_text(size = 20, face = "bold")
+  ) +
+  guides(fill = guide_legend(override.aes = list(color = NA)))
+```
+
+## Session info
+
+```{r}
+sessionInfo()
+```
