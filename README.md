@@ -44,8 +44,8 @@ Generating combined comparison figures summarizing cross-site differences
 
 Each file contains step-by-step code and comments so users can reproduce results and adapt the workflow to similar long-term defaunation experiments in tropical forests.
 
-⚠️ Note: Some original scripts were developed using user-specific paths (e.g., setwd() pointing to a local Windows directory). For reproducibility, users should place the Excel files in a /data folder (or adjust the file paths at the top of each script) before running or knitting the documents.
+⚠️ Note: The scripts are set to save results to the user’s Desktop on Windows. If you are using macOS or Linux, you’ll need to adjust the desktop_path accordingly.
 
-The purpose of this repository is to promote reproducibility and provide a learning resource for ecologists interested in how mammal defaunation influences taxonomic diversity and biotic homogenization over time.
+**The purpose of this repository is to promote reproducibility and provide a learning resource for ecologists interested in how mammal defaunation influences taxonomic diversity and biotic homogenization over time.**
 
 We recommend downloading the .Rmd and .html files for optimal visualization and for an easier, guided reproduction of the full workflow.
