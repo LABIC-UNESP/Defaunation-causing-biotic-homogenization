@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Luiz Guilherme dos Santos Ribas, Nacho Villar, Valesca Zipparro, Sérgio Nazareth, Yuri Souza, Carlos Rodrigo Brocardo, Gabriela Schmaedecke, Luana Hortenci, Rafael Souza Cruz Alves, Mauro Galetti" />
+  <title>Cross-site meta-analysis and plots</title>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Cross-site meta-analysis and plots</h1>
+<p class="author">Luiz Guilherme dos Santos Ribas, Nacho Villar, Valesca
+Zipparro, Sérgio Nazareth, Yuri Souza, Carlos Rodrigo Brocardo, Gabriela
+Schmaedecke, Luana Hortenci, Rafael Souza Cruz Alves, Mauro Galetti</p>
+</header>
+<p>This R Markdown document reproduces the <strong>cross-site
+meta-analysis</strong> and the main comparative plots, combining the
+outputs from the four site-specific scripts:</p>
+<ul>
+<li>ITA (<code>Itamambuca_T0_T156.xlsx</code>)</li>
+<li>CAR (<code>Cardoso_T0_T156.xlsx</code>)</li>
+<li>CBO (<code>Carlos_Botelho_T0_T108.xlsx</code>)</li>
+<li>VG (<code>Vargem_Grande_T0_T156.xlsx</code>)</li>
+</ul>
+<h2 id="before-you-run">Before you run</h2>
+<ol type="1">
+<li>Knit/run the four site scripts first (<strong>ITA</strong>,
+<strong>CAR</strong>, <strong>CBO</strong>, <strong>VG</strong>). They
+save outputs to your Desktop in:</li>
+</ol>
+<p><code>Defaunation_biotic_homogenization/&lt;SITE&gt;/</code></p>
+<ol start="2" type="1">
+<li>This meta-analysis script will also work from your Desktop. By
+default, it uses:</li>
+</ol>
+<p><code>Desktop/Defaunation_biotic_homogenization/Meta_analysis/</code></p>
+<ol start="3" type="1">
+<li>Place the required effect-size summary files in that folder (or
+change <code>effects_dir</code> in the code chunk below):</li>
+</ol>
+<ul>
+<li><code>effects beta.xlsx</code></li>
+<li><code>effects richness.xlsx</code></li>
+<li><code>effects shannon.xlsx</code></li>
+<li><code>effects inverse simpson.xlsx</code></li>
+</ul>
+<h2 id="meta-analysis-script">Meta-analysis script</h2>
+<pre class="{r}"><code>### Load required libraries
+library(readxl)
+library(dplyr)
+library(ggplot2)
+library(cowplot)
+library(tidyverse)
+
+### Set your working directory
+desktop_path &lt;- if (.Platform$OS.type == &quot;windows&quot;) file.path(Sys.getenv(&quot;USERPROFILE&quot;), &quot;Desktop&quot;) else file.path(Sys.getenv(&quot;HOME&quot;), &quot;Desktop&quot;)
+output_dir &lt;- file.path(desktop_path, &quot;Defaunation_biotic_homogenization&quot;, &quot;Meta_analysis&quot;)
+dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+setwd(output_dir)
+
+### File paths (expected inside `output_dir` by default)
+effects_dir &lt;- output_dir  # change this if your effects files are stored elsewhere
+
+file_paths &lt;- list(
+  beta = file.path(effects_dir, &quot;effects beta.xlsx&quot;),
+  richness = file.path(effects_dir, &quot;effects richness.xlsx&quot;),
+  shannon = file.path(effects_dir, &quot;effects shannon.xlsx&quot;),
+  inverse_simpson = file.path(effects_dir, &quot;effects inverse simpson.xlsx&quot;)
+)
+
+### Read interaction terms using confidence intervals
+read_interaction_effects &lt;- function(file_path) {
+  sheet_names &lt;- excel_sheets(file_path)
+  
+  data_list &lt;- lapply(sheet_names, function(sheet) {
+    df &lt;- read_excel(file_path, sheet = sheet)
+    colnames(df) &lt;- make.names(colnames(df))
+    
+    interaction_row &lt;- df %&gt;% filter(grepl(&quot;Time:TreatmentDefaunation&quot;, Term))
+    
+    # Extract CI limits from the &quot;IC&quot; column
+    ci_values &lt;- str_extract_all(interaction_row$CI, &quot;\\d+\\.\\d+&quot;)[[1]]
+    ci_lower &lt;- as.numeric(ci_values[1])
+    ci_upper &lt;- as.numeric(ci_values[2])
+    
+    interaction_row %&gt;%
+      mutate(
+        Estimate = as.numeric(Estimate),
+        CI_lower = ci_lower,
+        CI_upper = ci_upper,
+        Experiment = sheet
+      ) %&gt;%
+      select(Experiment, Estimate, CI_lower, CI_upper)
+  })
+  
+  bind_rows(data_list)
+}
+
+### Function to generate pairwise comparison plots
+generate_comparison_plot &lt;- function(data, plot_title, x_breaks, x_label) {
+  data$Site &lt;- recode(data$Experiment,
+                      Itamambuca = &quot;ITA&quot;,
+                      Cardoso = &quot;CAR&quot;,
+                      Botelho = &quot;CBO&quot;,
+                      Vargem = &quot;VG&quot;)
+  
+  ordered_pairs &lt;- list(
+    c(&quot;ITA&quot;, &quot;CAR&quot;),
+    c(&quot;ITA&quot;, &quot;CBO&quot;),
+    c(&quot;ITA&quot;, &quot;VG&quot;),
+    c(&quot;CAR&quot;, &quot;CBO&quot;),
+    c(&quot;CAR&quot;, &quot;VG&quot;),
+    c(&quot;CBO&quot;, &quot;VG&quot;)
+  )
+  
+  comparisons &lt;- lapply(ordered_pairs, function(pair) {
+    row1 &lt;- filter(data, Site == pair[1])
+    row2 &lt;- filter(data, Site == pair[2])
+    
+    diff &lt;- row1$Estimate - row2$Estimate
+    se_diff &lt;- sqrt(((row1$CI_upper - row1$CI_lower) / (2 * 1.96))^2 +
+                      ((row2$CI_upper - row2$CI_lower) / (2 * 1.96))^2)
+    z &lt;- diff / se_diff
+    p &lt;- 2 * (1 - pnorm(abs(z)))
+    
+    data.frame(
+      Comparison = paste(pair[1], &quot;vs.&quot;, pair[2]),
+      Difference = diff,
+      SE_Difference = se_diff,
+      P = p,
+      Symbol = ifelse(p &lt; 0.05, &quot;Significant&quot;, &quot;Non-significant&quot;)
+    )
+  })
+  
+  df &lt;- bind_rows(comparisons)
+  
+  # Set factor levels in the desired order
+  df$Comparison &lt;- factor(df$Comparison, levels = rev(c(
+    &quot;ITA vs. CAR&quot;, &quot;ITA vs. CBO&quot;, &quot;ITA vs. VG&quot;,
+    &quot;CAR vs. CBO&quot;, &quot;CAR vs. VG&quot;, &quot;CBO vs. VG&quot;
+  )))
+  
+  ggplot(df, aes(x = Difference, y = Comparison)) +
+    geom_point(aes(shape = Symbol), size = 6, fill = &quot;black&quot;) +
+    geom_errorbarh(aes(xmin = Difference - 1.96 * SE_Difference,
+                       xmax = Difference + 1.96 * SE_Difference), height = 0.2) +
+    geom_vline(xintercept = 0, linetype = &quot;dashed&quot;) +
+    scale_shape_manual(values = c(&quot;Non-significant&quot; = 21, &quot;Significant&quot; = 24)) +
+    labs(x = x_label, y = NULL, title = plot_title) +
+    theme_minimal() +
+    theme(
+      axis.text = element_text(size = 12),
+      axis.title.x = element_text(size = 14),
+      plot.title = element_text(size = 16),
+      panel.grid = element_blank(),
+      axis.line.x = element_line(color = &quot;black&quot;, size = 0.6),
+      axis.ticks.x = element_line(color = &quot;black&quot;, size = 0.6)
+    ) +
+    scale_x_continuous(
+      breaks = pretty(c(df$Difference - 1.96 * df$SE_Difference,
+                        df$Difference + 1.96 * df$SE_Difference), n = 6)
+      
+    )
+}
+
+### Process and plot each metric
+data_list &lt;- lapply(file_paths, read_interaction_effects)
+
+plots &lt;- list(
+  richness = generate_comparison_plot(data_list$richness, &quot;(a) Species richness&quot;, seq(-6, 6, 1), &quot;&quot;),
+  shannon = generate_comparison_plot(data_list$shannon, &quot;(b) Shannon&quot;, seq(-0.5, 0.5, 0.05), &quot;&quot;),
+  inverse_simpson = generate_comparison_plot(data_list$inverse_simpson, &quot;(c) Inverse Simpson&quot;, seq(-6, 6, 1), &quot;Difference in effect sizes (± 95% CI)&quot;),
+  beta = generate_comparison_plot(data_list$beta, &quot;(d) Beta diversity&quot;, seq(-0.2, 0.2, 0.02), &quot;Difference in effect sizes (± 95% CI)&quot;)
+)
+
+### Combine plots
+plot_grid(plots$richness, plots$shannon, plots$inverse_simpson, plots$beta, ncol = 2)</code></pre>
+<h2 id="session-info">Session info</h2>
+<pre class="{r}"><code>sessionInfo()</code></pre>
+</body>
+</html>
