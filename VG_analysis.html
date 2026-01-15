@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Luiz Guilherme dos Santos Ribas, Nacho Villar, Valesca Zipparro, Sérgio Nazareth, Yuri Souza, Carlos Rodrigo Brocardo, Gabriela Schmaedecke, Luana Hortenci, Rafael Souza Cruz Alves, Mauro Galetti" />
+  <title>VG_analysis</title>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">VG_analysis</h1>
+<p class="author">Luiz Guilherme dos Santos Ribas, Nacho Villar, Valesca
+Zipparro, Sérgio Nazareth, Yuri Souza, Carlos Rodrigo Brocardo, Gabriela
+Schmaedecke, Luana Hortenci, Rafael Souza Cruz Alves, Mauro Galetti</p>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#before-you-run"><span
+class="toc-section-number">0.1</span> Before you run</a></li>
+<li><a href="#full-analysis-script"><span
+class="toc-section-number">0.2</span> Full analysis script</a></li>
+<li><a href="#session-info"><span class="toc-section-number">0.3</span>
+Session info</a></li>
+</ul>
+</nav>
+<p>This R Markdown document reproduces the analyses for
+<strong>VG</strong> presented in the paper:</p>
+<blockquote>
+<p><strong>Mammal defaunation leads to biotic homogenization of plant
+communities in tropical rainforests</strong><br />
+Luiz Guilherme dos Santos Ribas, Nacho Villar, Valesca Zipparro, Sérgio
+Nazareth, Yuri Souza, Carlos Rodrigo Brocardo, Gabriela Schmaedecke,
+Luana Hortenci, Rafael Souza Cruz Alves, Mauro Galetti.</p>
+</blockquote>
+<h2 data-number="0.1" id="before-you-run"><span
+class="header-section-number">0.1</span> Before you run</h2>
+<ol type="1">
+<li>Install required R packages (see the first code chunk).</li>
+<li>Place the corresponding Excel file in the repository folder
+<code>data/</code>.</li>
+<li>The script will save outputs to your <strong>Desktop</strong>
+(Windows) in a folder named
+<code>Defaunation_biotic_homogenization/VG</code>.</li>
+</ol>
+<p>⚠️ Note: The scripts are set to save results to the user’s Desktop on
+Windows. If you are using macOS or Linux, you’ll need to adjust the
+<code>desktop_path</code> accordingly.</p>
+<p><strong>Expected input file:</strong>
+<code>data/Vargem_Grande_T0_T156.xlsx</code></p>
+<h2 data-number="0.2" id="full-analysis-script"><span
+class="header-section-number">0.2</span> Full analysis script</h2>
+<pre class="{r}"><code># Vargem Grande
+################################
+###################################### Directory and libraries
+###############################
+
+# Set your own directory below
+desktop_path &lt;- if (.Platform$OS.type == &quot;windows&quot;) file.path(Sys.getenv(&quot;USERPROFILE&quot;), &quot;Desktop&quot;) else file.path(Sys.getenv(&quot;HOME&quot;), &quot;Desktop&quot;)
+output_dir &lt;- file.path(desktop_path, &quot;Defaunation_biotic_homogenization&quot;, &quot;VG&quot;)
+dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+setwd(output_dir)
+
+# Load the libraries needed for analysis and plots
+library(readxl)
+library(vegan)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+library(openxlsx)
+library(purrr)
+library(scales)
+library(lmerTest)
+library(tibble)
+library(betapart)
+
+################################
+###################################### Data preparation
+###############################
+
+# Define the Excel file name
+excel_file &lt;- &quot;Vargem_Grande_T0_T156.xlsx&quot;
+# Data folder (relative to repository root)
+data_dir &lt;- &quot;data&quot;
+excel_file_path &lt;- file.path(data_dir, excel_file)
+
+# Define the sheet names
+sheet_names &lt;- c(&quot;Vargem Grande T0&quot;, &quot;Vargem Grande T6&quot;, &quot;Vargem Grande T12&quot;, &quot;Vargem Grande T18&quot;, &quot;Vargem Grande T24&quot;, &quot;Vargem Grande T30&quot;, &quot;Vargem Grande T36&quot;, &quot;Vargem Grande T42&quot;, &quot;Vargem Grande T48&quot;, &quot;Vargem Grande T54&quot;, &quot;Vargem Grande T60&quot;, &quot;Vargem Grande T66&quot;, &quot;Vargem Grande T72&quot;, &quot;Vargem Grande T78&quot;, &quot;Vargem Grande T84&quot;, &quot;Vargem Grande T96&quot;, &quot;Vargem Grande T108&quot;, &quot;Vargem Grande T156&quot;)
+
+# Create an empty list to store data frames
+sheet_list &lt;- list()
+
+# Create pairing structure (assuming each treatment sample is paired with a control sample)
+pairs &lt;- rep(1:12)
+pairs2 &lt;- rep(1:12)
+pairs&lt;-c(pairs,pairs2)
+
+# Loop through each sheet and read into separate data frames
+for (sheet in sheet_names) {
+  sheet_data &lt;- read_excel(excel_file_path, sheet = sheet)
+  sheet_list[[sheet]] &lt;- sheet_data
+}
+
+# Extract column names from each sheet
+column_names &lt;- map(sheet_list, names)
+
+# Extract treatment data from each data frame (third column)
+treat_data &lt;- sheet_list[[1]][, 3]
+treat_data&lt;-as.vector(treat_data)
+
+# Creating empty data.frames to save results
+paired.dist&lt;-cbind(treat_data$treatment,pairs)
+colnames(paired.dist)&lt;-c(&quot;treatment&quot;,&quot;pair&quot;)
+paired.dist&lt;-as.data.frame(paired.dist)
+empty_df &lt;- data.frame(matrix(NA, nrow = 24, ncol = 18))
+paired.dist.hel&lt;-cbind(paired.dist,empty_df)
+paired.dist.sim&lt;-cbind(paired.dist,empty_df)
+paired.dist.sne&lt;-cbind(paired.dist,empty_df)
+diversity.results&lt;-cbind(paired.dist,empty_df)
+
+# Naming columns
+colnames(paired.dist.hel)&lt;-c(&quot;Treatment&quot;,&quot;Pairs&quot;,&quot;T0&quot;,&quot;T6&quot;,&quot;T12&quot;, &quot;T18&quot;, &quot;T24&quot;, &quot;T30&quot;, &quot;T36&quot;, &quot;T42&quot;, &quot;T48&quot;, &quot;T54&quot;, &quot;T60&quot;, &quot;T66&quot;, &quot;T72&quot;, &quot;T78&quot;, &quot;T84&quot;, &quot;T96&quot;, &quot;T108&quot;, &quot;T156&quot;)
+colnames(paired.dist.sim)&lt;-c(&quot;Treatment&quot;,&quot;Pairs&quot;,&quot;T0&quot;,&quot;T6&quot;,&quot;T12&quot;, &quot;T18&quot;, &quot;T24&quot;, &quot;T30&quot;, &quot;T36&quot;, &quot;T42&quot;, &quot;T48&quot;, &quot;T54&quot;, &quot;T60&quot;, &quot;T66&quot;, &quot;T72&quot;, &quot;T78&quot;, &quot;T84&quot;, &quot;T96&quot;, &quot;T108&quot;, &quot;T156&quot;)
+colnames(paired.dist.sne)&lt;-c(&quot;Treatment&quot;,&quot;Pairs&quot;,&quot;T0&quot;,&quot;T6&quot;,&quot;T12&quot;, &quot;T18&quot;, &quot;T24&quot;, &quot;T30&quot;, &quot;T36&quot;, &quot;T42&quot;, &quot;T48&quot;, &quot;T54&quot;, &quot;T60&quot;, &quot;T66&quot;, &quot;T72&quot;, &quot;T78&quot;, &quot;T84&quot;, &quot;T96&quot;, &quot;T108&quot;, &quot;T156&quot;)
+colnames(diversity.results)&lt;-c(&quot;Treatment&quot;,&quot;Pairs&quot;,&quot;T0&quot;,&quot;T6&quot;,&quot;T12&quot;, &quot;T18&quot;, &quot;T24&quot;, &quot;T30&quot;, &quot;T36&quot;, &quot;T42&quot;, &quot;T48&quot;, &quot;T54&quot;, &quot;T60&quot;, &quot;T66&quot;, &quot;T72&quot;, &quot;T78&quot;, &quot;T84&quot;, &quot;T96&quot;, &quot;T108&quot;, &quot;T156&quot;)
+
+################################
+###################################### ALPHA DIVERSITY
+###############################
+
+# Creating empty data.frames for alpha diversity results
+diversity.results_richness&lt;-diversity.results
+diversity.results_shannon&lt;-diversity.results
+diversity.results_simpson&lt;-diversity.results
+
+# Estimating species richness, Shannon and inverse Simpson
+for (i in seq_along(sheet_list)) {
+  # Extract species data from each data frame and remove columns 1 to 3
+  spp_data &lt;- sheet_list[[i]][, -c(1:3)]
+  # Extract treatment data from each data frame (third column)
+  treat_data &lt;- sheet_list[[i]][, 3]
+  
+  spp_data&lt;-as.data.frame(spp_data)
+  treat_data&lt;-as.data.frame(treat_data)
+  
+  control &lt;- spp_data[c(1:12),]
+  treatment &lt;- spp_data[c(13:24),]
+  
+  # Applying hellinger correction
+  control &lt;- decostand(control, method = &quot;hellinger&quot;)
+  treatment &lt;- decostand(treatment, method = &quot;hellinger&quot;)
+  
+  # Estimate species richness
+  richness_control &lt;- specnumber(control)
+  richness_treatment &lt;- specnumber(treatment)
+  
+  # Calculate Shannon index
+  shannon_index_control &lt;- diversity(control, index = &quot;shannon&quot;)
+  shannon_index_treatment &lt;- diversity(treatment, index = &quot;shannon&quot;)
+  
+  # Calculate inverse Simpson index
+  simpson_index_control &lt;- diversity(control, index = &quot;invsimpson&quot;)
+  simpson_index_treatment &lt;- diversity(treatment, index = &quot;invsimpson&quot;)
+  
+  # Grouping
+  diversity.results_richness[1:12,i+2]&lt;-richness_control
+  diversity.results_richness[13:24,i+2]&lt;-richness_treatment
+  
+  diversity.results_shannon[1:12,i+2]&lt;-shannon_index_control
+  diversity.results_shannon[13:24,i+2]&lt;-shannon_index_treatment
+  
+  diversity.results_simpson[1:12,i+2]&lt;-simpson_index_control
+  diversity.results_simpson[13:24,i+2]&lt;-simpson_index_treatment
+}
+
+##########################################
+###### Modeling alpha diversity
+##########################################
+
+###########
+#####  Richness
+###########
+
+# Preparing data
+diversity.results_richness &lt;- na.omit(diversity.results_richness)
+richness_melted_data &lt;- pivot_longer(diversity.results_richness, cols = -c(Treatment, Pairs), names_to = &quot;Time&quot;, values_to = &quot;Distance&quot;)
+
+# GLMs
+richness_melted_data$Time &lt;- as.numeric(gsub(&quot;T&quot;, &quot;&quot;, richness_melted_data$Time))
+model&lt;-lmer(Distance ~ Time * Treatment + (1 | Pairs), data = richness_melted_data)
+summary(model)
+confint(model)
+
+# Checking some model assumptions
+res &lt;- resid(model)
+qqnorm(res)
+
+##### Preparing data for plots
+# Calculate n based on rows where Pairs is equal to 1
+n &lt;- richness_melted_data %&gt;%
+  summarise(num_pairs = n_distinct(Pairs)) %&gt;%
+  pull(num_pairs)
+
+# Calculate mean and standard error
+richness_summary_data &lt;- richness_melted_data %&gt;%
+  group_by(Time, Treatment) %&gt;%
+  summarize(mean_distance = mean(Distance),
+            sd_distance = sd(Distance),
+            n = n,
+            se_distance = sd_distance / sqrt(n),
+            lower_se = mean_distance - se_distance,
+            upper_se = mean_distance + se_distance,
+  )
+
+# Transform into data.frame for further manipulation
+richness_summary_data&lt;-as.data.frame(richness_summary_data)
+
+# Modify the Time column to remove the &quot;T&quot;
+richness_summary_data$Time &lt;- gsub(&quot;T&quot;, &quot;&quot;, richness_summary_data$Time)
+
+# Define the desired order of time points without &quot;T&quot;
+desired_order &lt;- c(&quot;0&quot;, &quot;6&quot;, &quot;12&quot;, &quot;18&quot;, &quot;24&quot;, &quot;30&quot;, &quot;36&quot;, &quot;42&quot;, &quot;48&quot;, &quot;54&quot;, &quot;60&quot;, &quot;66&quot;, &quot;72&quot;, &quot;78&quot;, &quot;84&quot;, &quot;96&quot;, &quot;108&quot;, &quot;156&quot;)
+
+# Convert the &quot;Time&quot; column to a factor with the desired order
+richness_summary_data$Time &lt;- factor(richness_summary_data$Time, levels = desired_order)
+
+# Order the data frame based on the &quot;Time&quot; column
+richness_summary_data &lt;- richness_summary_data[order(richness_summary_data$Time), ]
+
+# Define custom colors
+custom_colors &lt;- c(&quot;Control&quot; = &quot;black&quot;, &quot;Defaunation&quot; = &quot;#d95f02&quot;)
+
+# Data frame with significant differences between interaction term treatment*time from summary(model)
+#significant_months &lt;- data.frame(
+#  Time = c(&quot;0&quot;),  # Actual significant months
+#  Treatment = &quot;Defaunation&quot;,
+#  y_position = c(26),  # Position for the annotations, adjust as needed
+#  label = &quot;*&quot;
+#)
+
+# Plot the results from GLM evaluating richness data
+ggplot(richness_summary_data, aes(x = Time, y = mean_distance, color = Treatment, group = Treatment, fill = Treatment)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 3, shape = 21, stroke = 1.5) +
+  geom_ribbon(aes(ymin = lower_se, ymax = upper_se), alpha = 0.2, color = NA) +
+  labs(title = &quot;(D) VG&quot;,
+       x = &quot;Months&quot;,
+       y = &quot;Mean richness (± SE)&quot;) +
+  theme_minimal(base_size = 14) +
+  scale_color_manual(values = custom_colors, labels = c(&quot;Control&quot;, &quot;Defaunation&quot;)) +
+  scale_fill_manual(values = custom_colors, labels = c(&quot;Control&quot;, &quot;Defaunation&quot;)) +
+  scale_y_continuous(labels = scales::number_format(accuracy = 1), limits = c(10, NA), breaks = seq(10, 26, by = 2)) +
+  theme(
+    legend.title = element_blank(),
+    legend.position = c(0.5, 0.2),
+    legend.text = element_text(size = 16),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.y = element_text(size = 12),
+    axis.title = element_text(size = 14),
+    axis.line = element_line(color = &quot;black&quot;),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    plot.title = element_text(size = 20, face = &quot;bold&quot;),
+    plot.subtitle = element_text(size = 14)
+  ) +
+  guides(fill = guide_legend(override.aes = list(color = NA))) #+
+# geom_text(data = significant_months, aes(x = Time, y = y_position, label = label), color = &quot;black&quot;, size = 14)
+
+###########
+#####  Shannon
+###########
+
+# Preparing data
+diversity.results_shannon &lt;- na.omit(diversity.results_shannon)
+shannon_melted_data &lt;- pivot_longer(diversity.results_shannon, cols = -c(Treatment, Pairs), names_to = &quot;Time&quot;, values_to = &quot;Distance&quot;)
+
+# GLMs
+shannon_melted_data$Time &lt;- as.numeric(gsub(&quot;T&quot;, &quot;&quot;, shannon_melted_data$Time))
+model&lt;-lmer(Distance ~ Time * Treatment + (1 | Pairs), data = shannon_melted_data)
+summary(model)
+confint(model)
+
+# Checking some model assumptions
+res &lt;- resid(model)
+qqnorm(res)
+
+##### Preparing data for plots
+# Calculate n based on rows where Pairs is equal to 1
+n &lt;- melted_data %&gt;%
+  summarise(num_pairs = n_distinct(Pairs)) %&gt;%
+  pull(num_pairs)
+
+# Calculate mean and standard error
+shannon_summary_data &lt;- shannon_melted_data %&gt;%
+  group_by(Time, Treatment) %&gt;%
+  summarize(mean_distance = mean(Distance),
+            sd_distance = sd(Distance),
+            n = n,
+            se_distance = sd_distance / sqrt(n),
+            lower_se = mean_distance - se_distance,
+            upper_se = mean_distance + se_distance,
+  )
+
+# Transform into data.frame for further manipulation
+shannon_summary_data&lt;-as.data.frame(shannon_summary_data)
+
+# Modify the Time column to remove the &quot;T&quot;
+shannon_summary_data$Time &lt;- gsub(&quot;T&quot;, &quot;&quot;, shannon_summary_data$Time)
+
+# Define the desired order of time points without &quot;T&quot;
+desired_order &lt;- c(&quot;0&quot;, &quot;6&quot;, &quot;12&quot;, &quot;18&quot;, &quot;24&quot;, &quot;30&quot;, &quot;36&quot;, &quot;42&quot;, &quot;48&quot;, &quot;54&quot;, &quot;60&quot;, &quot;66&quot;, &quot;72&quot;, &quot;78&quot;, &quot;84&quot;, &quot;96&quot;, &quot;108&quot;, &quot;156&quot;)
+
+# Convert the &quot;Time&quot; column to a factor with the desired order
+shannon_summary_data$Time &lt;- factor(shannon_summary_data$Time, levels = desired_order)
+
+# Order the data frame based on the &quot;Time&quot; column
+shannon_summary_data &lt;- shannon_summary_data[order(shannon_summary_data$Time), ]
+
+# Define custom colors
+custom_colors &lt;- c(&quot;Control&quot; = &quot;black&quot;, &quot;Defaunation&quot; = &quot;#d95f02&quot;)
+
+# Data frame with significant differences between interaction term treatment*time from summary(model)
+#significant_months &lt;- data.frame(
+#  Time = c(&quot;0&quot;),  # Actual significant months
+#  Treatment = &quot;Defaunation&quot;,
+#  y_position = c(3.2),  # Position for the annotations, adjust as needed
+#  label = &quot;*&quot;
+#)
+
+# Plot the results from GLM evaluating Shannon data
+ggplot(shannon_summary_data, aes(x = Time, y = mean_distance, color = Treatment, group = Treatment, fill = Treatment)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 3, shape = 21, stroke = 1.5) +
+  geom_ribbon(aes(ymin = lower_se, ymax = upper_se), alpha = 0.2, color = NA) +
+  labs(title = &quot;(D) VG&quot;,
+       x = &quot;Months&quot;,
+       y = &quot;Mean Shannon (± SE)&quot;) +
+  theme_minimal(base_size = 14) +
+  scale_color_manual(values = custom_colors, labels = c(&quot;Control&quot;, &quot;Defaunation&quot;)) +
+  scale_fill_manual(values = custom_colors, labels = c(&quot;Control&quot;, &quot;Defaunation&quot;)) +
+  scale_y_continuous(labels = scales::number_format(accuracy = 0.01), limits = c(2, NA), breaks = seq(2, 3.25, by = 0.25)) +
+  theme(
+    legend.title = element_blank(),
+    legend.position = c(0.5, 0.2),
+    legend.text = element_text(size = 16),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.y = element_text(size = 12),
+    axis.title = element_text(size = 14),
+    axis.line = element_line(color = &quot;black&quot;),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    plot.title = element_text(size = 20, face = &quot;bold&quot;),
+    plot.subtitle = element_text(size = 14)
+  ) +
+  guides(fill = guide_legend(override.aes = list(color = NA))) #+
+# geom_text(data = significant_months, aes(x = Time, y = y_position, label = label), color = &quot;black&quot;, size = 14)
+
+###########
+#####  Inverse Simpson
+###########
+
+# Preparing data
+diversity.results_simpson &lt;- na.omit(diversity.results_simpson)
+simpson_melted_data &lt;- pivot_longer(diversity.results_simpson, cols = -c(Treatment, Pairs), names_to = &quot;Time&quot;, values_to = &quot;Distance&quot;)
+
+# GLMs
+simpson_melted_data$Time &lt;- as.numeric(gsub(&quot;T&quot;, &quot;&quot;, simpson_melted_data$Time))
+model&lt;-lmer(Distance ~ Time * Treatment + (1 | Pairs), data = simpson_melted_data)
+summary(model)
+confint(model)
+
+# Checking some model assumptions
+res &lt;- resid(model)
+qqnorm(res)
+
+##### Preparing data for plots
+# Calculate n based on rows where Pairs is equal to 1
+n &lt;- simpson_melted_data %&gt;%
+  summarise(num_pairs = n_distinct(Pairs)) %&gt;%
+  pull(num_pairs)
+
+# Calculate mean and standard error
+simpson_summary_data &lt;- simpson_melted_data %&gt;%
+  group_by(Time, Treatment) %&gt;%
+  summarize(mean_distance = mean(Distance),
+            sd_distance = sd(Distance),
+            n = n,
+            se_distance = sd_distance / sqrt(n),
+            lower_se = mean_distance - se_distance,
+            upper_se = mean_distance + se_distance,
+  )
+
+# Transform into data.frame for further manipulation
+simpson_summary_data&lt;-as.data.frame(simpson_summary_data)
+
+# Modify the Time column to remove the &quot;T&quot;
+simpson_summary_data$Time &lt;- gsub(&quot;T&quot;, &quot;&quot;, simpson_summary_data$Time)
+
+# Define the desired order of time points without &quot;T&quot;
+desired_order &lt;- c(&quot;0&quot;, &quot;6&quot;, &quot;12&quot;, &quot;18&quot;, &quot;24&quot;, &quot;30&quot;, &quot;36&quot;, &quot;42&quot;, &quot;48&quot;, &quot;54&quot;, &quot;60&quot;, &quot;66&quot;, &quot;72&quot;, &quot;78&quot;, &quot;84&quot;, &quot;96&quot;, &quot;108&quot;, &quot;156&quot;)
+
+# Convert the &quot;Time&quot; column to a factor with the desired order
+simpson_summary_data$Time &lt;- factor(simpson_summary_data$Time, levels = desired_order)
+
+# Order the data frame based on the &quot;Time&quot; column
+simpson_summary_data &lt;- simpson_summary_data[order(simpson_summary_data$Time), ]
+
+# Define custom colors
+custom_colors &lt;- c(&quot;Control&quot; = &quot;black&quot;, &quot;Defaunation&quot; = &quot;#d95f02&quot;)
+
+# Data frame with significant differences between interaction term treatment*time from summary(model)
+#significant_months &lt;- data.frame(
+#  Time = c(&quot;0&quot;),  # Actual significant months
+#  Treatment = &quot;Defaunation&quot;,
+#  y_position = c(18),  # Position for the annotations, adjust as needed
+#  label = &quot;*&quot;
+#)
+
+# Plot the results from GLM evaluating inverse Simpson data
+ggplot(simpson_summary_data, aes(x = Time, y = mean_distance, color = Treatment, group = Treatment, fill = Treatment)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 3, shape = 21, stroke = 1.5) +
+  geom_ribbon(aes(ymin = lower_se, ymax = upper_se), alpha = 0.2, color = NA) +
+  labs(title = &quot;(D) VG&quot;,
+       x = &quot;Months&quot;,
+       y = &quot;Mean inverse Simpson (± SE)&quot;) +
+  theme_minimal(base_size = 14) +
+  scale_color_manual(values = custom_colors, labels = c(&quot;Control&quot;, &quot;Defaunation&quot;)) +
+  scale_fill_manual(values = custom_colors, labels = c(&quot;Control&quot;, &quot;Defaunation&quot;)) +
+  scale_y_continuous(labels = scales::number_format(accuracy = 0.01), limits = c(8, NA), breaks = seq(8, 22, by = 2)) +
+  theme(
+    legend.title = element_blank(),
+    legend.position = c(0.5, 0.2),
+    legend.text = element_text(size = 16),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.y = element_text(size = 12),
+    axis.title = element_text(size = 14),
+    axis.line = element_line(color = &quot;black&quot;),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    plot.title = element_text(size = 20, face = &quot;bold&quot;),
+    plot.subtitle = element_text(size = 14)
+  ) +
+  guides(fill = guide_legend(override.aes = list(color = NA))) #+
+# geom_text(data = significant_months, aes(x = Time, y = y_position, label = label), color = &quot;black&quot;, size = 14)
+
+################################
+###### BETA DIVERSITY ##########
+################################
+
+##---------------------------------
+## Helper: jackknife multi-site β
+##---------------------------------
+jackknife_multi_beta &lt;- function(comm) {
+  # comm: matriz comunidade (sites x espécies), já transformada (ex.: Hellinger)
+  
+  n_sites &lt;- nrow(comm)
+  if (n_sites &lt; 3) stop(&quot;Need at least 3 sites for jackknife on multi-site beta.&quot;)
+  
+  # β multi-site observada (todos os sítios)
+  bm_full &lt;- beta.multi.abund(comm, index.family = &quot;bray&quot;)
+  theta_full &lt;- c(
+    total = bm_full$beta.BRAY,
+    bal   = bm_full$beta.BRAY.BAL,
+    grad  = bm_full$beta.BRAY.GRA
+  )
+  
+  # Jackknife: leave-one-out
+  jack_vals &lt;- matrix(NA_real_, nrow = n_sites, ncol = 3)
+  colnames(jack_vals) &lt;- c(&quot;total&quot;, &quot;bal&quot;, &quot;grad&quot;)
+  
+  for (i in seq_len(n_sites)) {
+    comm_i &lt;- comm[-i, , drop = FALSE]
+    bm_i   &lt;- beta.multi.abund(comm_i, index.family = &quot;bray&quot;)
+    jack_vals[i, ] &lt;- c(
+      bm_i$beta.BRAY,
+      bm_i$beta.BRAY.BAL,
+      bm_i$beta.BRAY.GRA
+    )
+  }
+  
+  # Pseudo-valores jackknife: θ*_i = n * θ_full - (n - 1) * θ_(−i)
+  pseudo &lt;- matrix(NA_real_, nrow = n_sites, ncol = 3)
+  colnames(pseudo) &lt;- c(&quot;total&quot;, &quot;bal&quot;, &quot;grad&quot;)
+  
+  for (k in 1:3) {
+    theta_k_full &lt;- theta_full[k]
+    theta_k_jack &lt;- jack_vals[, k]
+    pseudo[, k]  &lt;- n_sites * theta_k_full - (n_sites - 1) * theta_k_jack
+  }
+  
+  # Média e variância jackknife dos pseudo-valores
+  pseudo_mean &lt;- colMeans(pseudo)
+  var_jack    &lt;- colSums((pseudo - matrix(pseudo_mean, n_sites, 3, byrow = TRUE))^2) /
+    (n_sites * (n_sites - 1))
+  se_jack     &lt;- sqrt(var_jack)
+  
+  # IC ~95% com t_{n-1}
+  alpha &lt;- 0.05
+  t_crit &lt;- qt(1 - alpha / 2, df = n_sites - 1)
+  
+  lower &lt;- theta_full - t_crit * se_jack
+  upper &lt;- theta_full + t_crit * se_jack
+  
+  list(
+    obs_total   = theta_full[&quot;total&quot;],
+    obs_bal     = theta_full[&quot;bal&quot;],
+    obs_grad    = theta_full[&quot;grad&quot;],
+    se_total    = se_jack[&quot;total&quot;],
+    se_bal      = se_jack[&quot;bal&quot;],
+    se_grad     = se_jack[&quot;grad&quot;],
+    lower_total = lower[&quot;total&quot;],
+    upper_total = upper[&quot;total&quot;],
+    lower_bal   = lower[&quot;bal&quot;],
+    upper_bal   = upper[&quot;bal&quot;],
+    lower_grad  = lower[&quot;grad&quot;],
+    upper_grad  = upper[&quot;grad&quot;]
+  )
+}
+
+################################
+###### MULTI-SITE β LOOP #######
+################################
+
+# labels de tempo: &quot;T0&quot;,&quot;T6&quot;,...
+time_labels &lt;- gsub(&quot;Vargem Grande &quot;, &quot;&quot;, sheet_names)
+
+# Data frame para multi-site β + jackknife SE/CI
+beta_multi_df &lt;- expand.grid(
+  Time      = time_labels,
+  Treatment = c(&quot;Control&quot;, &quot;Defaunation&quot;),
+  stringsAsFactors = FALSE
+) %&gt;%
+  mutate(
+    beta_total   = NA_real_,
+    beta_bal     = NA_real_,
+    beta_grad    = NA_real_,
+    se_total     = NA_real_,
+    se_bal       = NA_real_,
+    se_grad      = NA_real_,
+    lower_total  = NA_real_,
+    upper_total  = NA_real_,
+    lower_bal    = NA_real_,
+    upper_bal    = NA_real_,
+    lower_grad   = NA_real_,
+    upper_grad   = NA_real_
+  )
+
+# (opcional) se ainda quiser guardar média par-a-par
+beta_pairwise_df &lt;- data.frame(
+  Time        = character(),
+  Treatment   = character(),
+  mean_within = numeric(),
+  stringsAsFactors = FALSE
+)
+
+for (i in seq_along(sheet_list)) {
+  
+  this_sheet &lt;- sheet_list[[i]]
+  
+  spp_data  &lt;- this_sheet[, -c(1:3)]
+  treat_col &lt;- this_sheet[, 3, drop = FALSE]
+  colnames(treat_col) &lt;- &quot;Treatment&quot;
+  
+  spp_data   &lt;- as.data.frame(spp_data)
+  treat_data &lt;- as.data.frame(treat_col)
+  treat_data$Treatment &lt;- factor(treat_data$Treatment)
+  
+  # Transformação de Hellinger
+  spp_data_hel &lt;- decostand(spp_data, method = &quot;hellinger&quot;)
+  
+  # ---------- Multi-site β (Baselga) por tratamento + jackknife ----------
+  for (tr in levels(treat_data$Treatment)) {
+    idx &lt;- which(treat_data$Treatment == tr)
+    if (length(idx) &gt;= 3) {  # precisa de pelo menos 3 sítios p/ jackknife
+      comm_tr  &lt;- spp_data_hel[idx, , drop = FALSE]
+      jack_out &lt;- jackknife_multi_beta(comm_tr)
+      
+      row_sel &lt;- beta_multi_df$Time == time_labels[i] &amp;
+        beta_multi_df$Treatment == tr
+      
+      beta_multi_df[row_sel,
+                    c(&quot;beta_total&quot;, &quot;beta_bal&quot;, &quot;beta_grad&quot;,
+                      &quot;se_total&quot;, &quot;se_bal&quot;, &quot;se_grad&quot;,
+                      &quot;lower_total&quot;, &quot;upper_total&quot;,
+                      &quot;lower_bal&quot;, &quot;upper_bal&quot;,
+                      &quot;lower_grad&quot;, &quot;upper_grad&quot;)] &lt;-
+        c(
+          jack_out$obs_total,
+          jack_out$obs_bal,
+          jack_out$obs_grad,
+          jack_out$se_total,
+          jack_out$se_bal,
+          jack_out$se_grad,
+          jack_out$lower_total,
+          jack_out$upper_total,
+          jack_out$lower_bal,
+          jack_out$upper_bal,
+          jack_out$lower_grad,
+          jack_out$upper_grad
+        )
+    }
+  }
+  
+  # ---------- OPCIONAL: mean pairwise Bray dentro de tratamentos ----------
+  bray_curtis_dist &lt;- vegdist(spp_data_hel, method = &quot;bray&quot;)
+  bray_mat &lt;- as.matrix(bray_curtis_dist)
+  
+  for (tr in levels(treat_data$Treatment)) {
+    idx &lt;- which(treat_data$Treatment == tr)
+    if (length(idx) &gt;= 2) {
+      submat &lt;- bray_mat[idx, idx]
+      mean_within &lt;- mean(submat[upper.tri(submat)], na.rm = TRUE)
+      
+      beta_pairwise_df &lt;- rbind(
+        beta_pairwise_df,
+        data.frame(
+          Time        = time_labels[i],
+          Treatment   = tr,
+          mean_within = mean_within,
+          stringsAsFactors = FALSE
+        )
+      )
+    }
+  }
+}
+
+##########################################
+###### Modelos: multi-site β #############
+##########################################
+
+beta_multi_long &lt;- beta_multi_df %&gt;%
+  mutate(
+    Time_num  = as.numeric(gsub(&quot;T&quot;, &quot;&quot;, Time)),
+    Time      = gsub(&quot;T&quot;, &quot;&quot;, Time),
+    Time      = factor(Time, levels = desired_order),  # já definido acima
+    Treatment = factor(Treatment)
+  )
+
+# Total multi-site β
+model_beta_total &lt;- lm(
+  beta_total ~ Time_num * Treatment,
+  data    = beta_multi_long
+)
+summary(model_beta_total)
+confint(model_beta_total)
+
+# Balanced variation
+model_beta_bal &lt;- lm(
+  beta_bal ~ Time_num * Treatment,
+  data    = beta_multi_long
+)
+summary(model_beta_bal)
+confint(model_beta_bal)
+
+# Abundance gradients
+model_beta_grad &lt;- lm(
+  beta_grad ~ Time_num * Treatment,
+  data    = beta_multi_long
+)
+summary(model_beta_grad)
+confint(model_beta_grad)
+
+##############################################
+#### Plots: multi-site β + SE (jackknife) ####
+##############################################
+
+## Total multi-site β
+ggplot(beta_multi_long,
+       aes(x = Time, y = beta_total,
+           color = Treatment, group = Treatment, fill = Treatment)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 3, shape = 21, stroke = 1.5) +
+  geom_ribbon(aes(ymin = beta_total - se_total,
+                  ymax = beta_total + se_total),
+              alpha = 0.2, color = NA) +
+  labs(
+    title = &quot;(D) VG&quot;,
+    x = &quot;Months&quot;,
+    y = &quot;Total multi-site β (± SE)&quot;
+  ) +
+  theme_minimal(base_size = 14) +
+  scale_color_manual(values = custom_colors,
+                     labels = c(&quot;Control&quot;, &quot;Defaunation&quot;)) +
+  scale_fill_manual(values = custom_colors,
+                    labels = c(&quot;Control&quot;, &quot;Defaunation&quot;)) +
+  scale_y_continuous(
+    labels = scales::number_format(accuracy = 0.01),
+    limits = c(0.86, 0.94),
+    breaks = seq(0.86, 0.94, 0.02)
+  ) +
+  theme(
+    legend.title     = element_blank(),
+    legend.position  = c(0.5, 0.9),
+    legend.text      = element_text(size = 16),
+    axis.text.x      = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.y      = element_text(size = 12),
+    axis.title       = element_text(size = 14),
+    axis.line        = element_line(color = &quot;black&quot;),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    plot.title       = element_text(size = 20, face = &quot;bold&quot;)
+  ) +
+  guides(fill = guide_legend(override.aes = list(color = NA)))
+
+## Balanced variation (multi-site β)
+ggplot(beta_multi_long,
+       aes(x = Time, y = beta_bal,
+           color = Treatment, group = Treatment, fill = Treatment)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 3, shape = 21, stroke = 1.5) +
+  geom_ribbon(aes(ymin = beta_bal - se_bal,
+                  ymax = beta_bal + se_bal),
+              alpha = 0.2, color = NA) +
+  labs(
+    title = &quot;(D) VG&quot;,
+    x = &quot;Months&quot;,
+    y = &quot;Balanced variation (± SE)&quot;
+  ) +
+  theme_minimal(base_size = 14) +
+  scale_color_manual(values = custom_colors,
+                     labels = c(&quot;Control&quot;, &quot;Defaunation&quot;)) +
+  scale_fill_manual(values = custom_colors,
+                    labels = c(&quot;Control&quot;, &quot;Defaunation&quot;)) +
+  scale_y_continuous(
+    labels = scales::number_format(accuracy = 0.01),
+    limits = c(0.84, 0.92),
+    breaks = seq(0.84, 0.92, 0.02)
+  ) +
+  theme(
+    legend.title    = element_blank(),
+    legend.position = c(0.5, 0.9),
+    legend.text     = element_text(size = 16),
+    axis.text.x     = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.y     = element_text(size = 12),
+    axis.title      = element_text(size = 14),
+    axis.line       = element_line(color = &quot;black&quot;),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    plot.title      = element_text(size = 20, face = &quot;bold&quot;)
+  ) +
+  guides(fill = guide_legend(override.aes = list(color = NA)))
+
+## Abundance gradients (multi-site β)
+ggplot(beta_multi_long,
+       aes(x = Time, y = beta_grad,
+           color = Treatment, group = Treatment, fill = Treatment)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 3, shape = 21, stroke = 1.5) +
+  geom_ribbon(aes(ymin = beta_grad - se_grad,
+                  ymax = beta_grad + se_grad),
+              alpha = 0.2, color = NA) +
+  labs(
+    title = &quot;(D) VG&quot;,
+    x = &quot;Months&quot;,
+    y = &quot;Abundance gradients (± SE)&quot;
+  ) +
+  theme_minimal(base_size = 14) +
+  scale_color_manual(values = custom_colors,
+                     labels = c(&quot;Control&quot;, &quot;Defaunation&quot;)) +
+  scale_fill_manual(values = custom_colors,
+                    labels = c(&quot;Control&quot;, &quot;Defaunation&quot;)) +
+  scale_y_continuous(
+    labels = scales::number_format(accuracy = 0.01),
+    limits = c(0, 0.03),
+    breaks = seq(0, 0.03, 0.01)
+  ) +
+  theme(
+    legend.title    = element_blank(),
+    legend.position = c(0.5, 0.9),
+    legend.text     = element_text(size = 16),
+    axis.text.x     = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.y     = element_text(size = 12),
+    axis.title      = element_text(size = 14),
+    axis.line       = element_line(color = &quot;black&quot;),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    plot.title      = element_text(size = 20, face = &quot;bold&quot;)
+  ) +
+  guides(fill = guide_legend(override.aes = list(color = NA)))</code></pre>
+<h2 data-number="0.3" id="session-info"><span
+class="header-section-number">0.3</span> Session info</h2>
+<pre class="{r}"><code>sessionInfo()</code></pre>
+</body>
+</html>
