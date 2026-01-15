@@ -1,6 +1,7 @@
 This repository provides the data and annotated R scripts necessary to reproduce the analyses presented in the paper:
 
-/b Mammal defaunation leads to biotic homogenization of plant communities in tropical rainforests
+**Mammal defaunation leads to biotic homogenization of plant communities in tropical rainforests**
+
 Luiz Guilherme dos Santos Ribas, Nacho Villar, Valesca Zipparro, Sérgio Nazareth, Yuri Souza, Carlos Rodrigo Brocardo, Gabriela Schmaedecke, Luana Hortenci, Rafael Souza Cruz Alves, Mauro Galetti.
 
 The repository includes:
